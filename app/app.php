@@ -5,18 +5,11 @@ session_start();
 if (!empty($_SESSION["board"]))
     $board = $_SESSION["board"];
 else
-    $board = emptyBorder();
+    $board = emptyBoard();
 
-if (!empty($_SESSION["queensCount"]))
-    $queensCount = $_SESSION["queensCount"];
-else
-    $queensCount = 8;
-
-function saveValues()
+function saveBoard($board)
 {
-    global $board, $queensCount;
     $_SESSION["board"] = $board;
-    $_SESSION["queensCount"] = $queensCount;
 }
 
 function alert($message)
@@ -24,35 +17,13 @@ function alert($message)
     echo "<script type='text/javascript'>alert('$message');</script>";
 }
 
-function emptyBorder()
+function emptyBoard()
 {
     return array_fill(0, 8, array_fill(0, 8, 0));
 }
 
-function validateCellIndexes($row, $column)
+function setQueen($board, $row, $column)
 {
-    global $board;
-    if (isset($row) && isset($column)) {
-        if (is_numeric($row) && is_numeric($column) && $row < count($board) && $column < count($board)) {
-            return true;
-        } else
-            alert("Enter the correct values!");
-    } else
-        alert("Enter all values!");
-    return false;
-}
-
-function clearBoard()
-{
-    global $board, $queensCount;
-    $board = emptyBorder();
-    $queensCount = 8;
-    saveValues();
-}
-
-function setQueen($row, $column)
-{
-    global $board, $queensCount;
     if ($board[$row][$column] != 0)
         alert("It is forbidden to put a queen in this cell!");
     else {
@@ -78,14 +49,12 @@ function setQueen($row, $column)
                 $board[$rm][$cp]++;
         }
         $board[$row][$column] = -1;
-        $queensCount--;
-        saveValues();
     }
+    return $board;
 }
 
-function removeQueen($row, $column)
+function removeQueen($board, $row, $column)
 {
-    global $board, $queensCount;
     if ($board[$row][$column] === -1) {
         $n = count($board);
         for ($c = 0; $c < $n; $c++) {
@@ -109,8 +78,58 @@ function removeQueen($row, $column)
                 $board[$rm][$cp]--;
         }
         $board[$row][$column] = 0;
-        $queensCount++;
-        saveValues();
     }
+    return $board;
 }
+
+function replaceQueen($board, $row, $column)
+{
+    $board = removeQueen($board, $row, $column);
+    for ($i = 0; $i < count($board[$row]); $i++) {
+        if ($board[$row][$i] === 0 && $i != $column)
+            return setQueen($board, $row, $i);
+    }
+    return null;
+}
+
+function resolvePuzzle($board)
+{
+    $result = array($board);
+    $queensPositions = array();
+    $row = 0;
+    while ($row < count($board)) {
+        $isSet = false;
+        for ($i = 0; $i < count($board[$row]); $i++) {
+            if ($board[$row][$i] === 0) {
+                $board = setQueen($board, $row, $i);
+                array_push($result, $board);
+                array_push($queensPositions, [$row, $i]);
+                $isSet = true;
+                break;
+            } else if ($board[$row][$i] === -1) {
+                $isSet = true;
+                break;
+            }
+        }
+
+        if ($isSet)
+            $row++;
+        else {
+            $lastQueen = array_pop($queensPositions);
+            if ($lastQueen) {
+                list($a, $b) = $lastQueen;
+                $buffer = replaceQueen($board, $a, $b);
+                if ($buffer) {
+                    $board = $buffer;
+                    array_push($result, $board);
+                }
+            } else {
+                alert("The solution does not exist!");
+                break;
+            }
+        }
+    }
+    return $result;
+}
+
 ?>

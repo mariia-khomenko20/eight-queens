@@ -4,23 +4,24 @@ include "app.php";
 if (isset($_POST['set_queen'])) {
     $row = $_POST["row"];
     $column = $_POST["column"];
-    if (validateCellIndexes($row, $column))
-        setQueen($row, $column);
+    $board = setQueen($board, $row, $column);
+    saveBoard($board);
 }
 
 if (isset($_POST['remove_queen'])) {
     $row = $_POST["row"];
     $column = $_POST["column"];
-    if (validateCellIndexes($row, $column))
-        removeQueen($row, $column);
+    $board = removeQueen($board, $row, $column);
+    saveBoard($board);
 }
 
 if (isset($_POST['clear_board'])) {
-    clearBoard();
+    $board = emptyBoard();
+    saveBoard($board);
 }
 
-if (isset($_POST['start'])) {
-
+if (isset($_POST['resolve_puzzle'])) {
+    header('Location: result.php');
 }
 ?>
 
@@ -38,28 +39,43 @@ if (isset($_POST['start'])) {
 </head>
 
 <body>
-    <div class="flex w-screen h-screen justify-center py-10">
+    <div class="flex w-screen h-screen justify-center py-7">
         <div class="flex flex-col space-y-10">
-            <form method="post">
-                <div class="flex flex-col space-y-5">
-                    <div class="flex flex-row space-x-3 items-end">
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-sm">Row</label>
-                            <input name="row" maxlength="1"
-                                class="w-24 rounded-sm py-1 px-3 outline outline-1 focus:outline-2">
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-sm">Column</label>
-                            <input name="column" maxlength="1"
-                                class="w-24 rounded-sm py-1 px-3 outline outline-1 focus:outline-2">
-                        </div>
-                        <button name="set_queen"
-                            class="rounded-sm h-12 px-10 text-white bg-blue-800 hover:bg-blue-700">Set Queen</button>
-                        <button name="remove_queen"
-                            class="rounded-sm h-12 px-10 text-white bg-red-800 hover:bg-red-700">Remove Queen</button>
-                        <button name="clear_board"
-                            class="rounded-sm h-12 px-10 text-white bg-red-800 hover:bg-red-700">Clear Board</button>
-                    </div>
+            <div class="flex justify-center text-2xl font-bold">
+                Eight Queens Puzzle
+            </div>
+            <form method="post" class="flex flex-col space-y-5">
+                <div class="flex flex-row items-end justify-between">
+                    <label class="flex flex-col">
+                        Row
+                        <input name="row" type="number" value="0" min="0" max="7"
+                            class="rounded-sm mt-1 py-1 pl-3 outline outline-1 focus:outline-2">
+                    </label>
+
+                    <label class="flex flex-col">
+                        Column
+                        <input name="column" type="number" value="0" min="0" max="7"
+                            class="rounded-sm mt-1 py-1 pl-3 outline outline-1 focus:outline-2">
+                    </label>
+                    <button name="set_queen"
+                        class="rounded-sm h-12 px-8 font-bold text-white bg-blue-800 hover:bg-blue-700 focus:outline-none">
+                        Set Queen
+                    </button>
+                    <button name="remove_queen"
+                        class="rounded-sm h-12 px-8 font-bold text-white bg-red-800 hover:bg-red-700 focus:outline-none">
+                        Remove Queen
+                    </button>
+                </div>
+                <div class="flex flex-row justify-between">
+                    <button name="resolve_puzzle"
+                        class="rounded-sm w-64 h-12 px-8 font-bold text-white bg-green-800 hover:bg-green-700 focus:outline-none">
+                        Resolve Puzzle
+                    </button>
+                    <button name="clear_board"
+                        class="rounded-sm w-64 h-12 px-8 font-bold text-white bg-red-800 hover:bg-red-700 focus:outline-none">
+                        Clear Board
+                    </button>
+
                 </div>
             </form>
             <div class="flex flex-row">
@@ -78,7 +94,7 @@ if (isset($_POST['start'])) {
                         <?php
                         for ($i = 0; $i < count($board); $i++) {
                             echo "<tr>";
-                            echo "<th>$i</th>";
+                            echo "<th class='pr-1'>$i</th>";
                             $a = $i % 2;
                             for ($j = 0; $j < count($board[$i]); $j++) {
                                 $b = $j % 2;
@@ -86,11 +102,9 @@ if (isset($_POST['start'])) {
                                     $color = "bg-gray-800 text-slate-200";
                                 else
                                     $color = "bg-slate-200 text-gray-800";
-                                echo "<td><div class='flex items-center justify-center w-14 h-14 p-1 fill-current $color'>";
+                                echo "<td><div class='flex items-center justify-center w-16 h-16 p-1 fill-current $color'>";
                                 if ($board[$i][$j] === -1)
                                     echo file_get_contents("./assets/queen.svg");
-                                else if ($board[$i][$j] > 0)
-                                    echo $board[$i][$j];
                                 echo "</div></td>";
                             }
                             echo "</tr>";
